@@ -1,5 +1,7 @@
 # Kong plugins
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
 This repository contains a collection of plugins created to extend Kong or to integrate it with other applications and services.
 
 ## Compile your plugin inside the Docker container
@@ -22,4 +24,4 @@ Here's some usefull commands:
 
 ## List of Plugins
 
-- **OPA**: Integrate Open Policy Agent (OPA) with Kong API Gateway
+- [Integrate Open Policy Agent (OPA) with Kong API Gateway](doc/kong-plugin-opa.md)
