@@ -1,0 +1,60 @@
+name: Luarocks
+
+# Controls when the action will run. Triggers the workflow on push or pull request 
+# events but only for the master branch
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # Run tests
+  # inside a Luarocks Docker container (https://github.com/zahiyo/luarocks/packages/152120)
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: Pull luarocks:3.3-lua-5.1
+        run: docker pull docker.pkg.github.com/zahiyo/luarocks/luarocks:3.3-lua-5.1
+
+      - name: Compile Lua code
+        run: docker run --rm -v "$PWD":/usr/src/plugins -w /usr/src/plugins docker.pkg.github.com/zahiyo/luarocks/luarocks:3.3-lua-5.1 luarocks make
+
+      - name: Run code analysis
+        run: docker run --rm -v "$PWD":/usr/src/plugins -w /usr/src/plugins docker.pkg.github.com/zahiyo/luarocks/luarocks:3.3-lua-5.1 luacheck .
+
+      - name: Run tests
+        run: docker run --rm -v "$PWD":/usr/src/plugins -w /usr/src/plugins docker.pkg.github.com/zahiyo/luarocks/luarocks:3.3-lua-5.1 luarocks test
+  
+  # Package rocks
+  pack:
+    # Ensure test job passes before pushing .
+    needs: test
+
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: Pull luarocks:3.3-lua-5.1
+        run: docker pull docker.pkg.github.com/zahiyo/luarocks/luarocks:3.3-lua-5.1
+
+      - name: Pack rocks
+        run: |
+          for rockspec in *.rockspec; do
+            docker run --rm -v "$PWD":/usr/src/plugins -w /usr/src/plugins \
+            docker.pkg.github.com/zahiyo/luarocks/luarocks:3.3-lua-5.1 \
+            luarocks make --pack-binary-rock $rockspec
+          done
