@@ -1,6 +1,9 @@
 # Kong plugins
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/zahiyo/kong-plugins/Luarocks)
+![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/zahiyo/kong-plugins?label=version)
+![Codecov](https://img.shields.io/codecov/c/github/zahiyo/kong-plugins)
+![GitHub](https://img.shields.io/github/license/zahiyo/kong-plugins)
 
 This repository contains a collection of plugins created to extend Kong or to integrate it with other applications and services.
 

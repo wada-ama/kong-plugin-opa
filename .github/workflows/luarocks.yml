@@ -37,8 +37,17 @@ jobs:
         run: docker run --rm -v "$PWD":/usr/src/plugins -w /usr/src/plugins docker.pkg.github.com/zahiyo/luarocks/luarocks:3.3-lua-5.1 luacheck .
 
       - name: Run tests
-        run: docker run --rm -v "$PWD":/usr/src/plugins -w /usr/src/plugins docker.pkg.github.com/zahiyo/luarocks/luarocks:3.3-lua-5.1 luarocks test
-  
+        run: |
+          docker run --rm -v "$PWD":/usr/src/plugins -w /usr/src/plugins docker.pkg.github.com/zahiyo/luarocks/luarocks:3.3-lua-5.1 luarocks test
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./luacov.report.out
+          flags: unittests
+          fail_ci_if_error: true
+
   # Package rocks
   pack:
     # Ensure test job passes before pushing .
