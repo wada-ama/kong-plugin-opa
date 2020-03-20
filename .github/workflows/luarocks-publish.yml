@@ -1,22 +1,22 @@
-name: Luarocks
+name: Publish Luarocks
 
 # Controls when the action will run. Triggers the workflow on push or pull request 
 # events but only for the master branch
 on:
   push:
-    branches: 
+    branches:
       - master
     tags: 
       - v*
 
   pull_request:
-    branches: 
+    branches:
       - master
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+# A workflow run jobs that will publish the rock on successful tests
 jobs:
   # Run tests
-  # inside a Luarocks Docker container (https://github.com/zahiyo/luarocks/packages/152120)
+  # inside a Luarocks Docker container (https://github.com/wada-ama/luarocks/packages/152120)
   test:
     runs-on: ubuntu-latest
 
@@ -28,17 +28,16 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
       - name: Pull luarocks:3.3-lua-5.1
-        run: docker pull docker.pkg.github.com/zahiyo/luarocks/luarocks:3.3-lua-5.1
+        run: docker pull docker.pkg.github.com/wada-ama/luarocks/luarocks:3.3-lua-5.1
 
       - name: Compile Lua code
-        run: docker run --rm -v "$PWD":/usr/src/plugins -w /usr/src/plugins docker.pkg.github.com/zahiyo/luarocks/luarocks:3.3-lua-5.1 luarocks make
+        run: docker run --rm -v "$PWD":/usr/src/plugins -w /usr/src/plugins docker.pkg.github.com/wada-ama/luarocks/luarocks:3.3-lua-5.1 luarocks make
 
       - name: Run code analysis
-        run: docker run --rm -v "$PWD":/usr/src/plugins -w /usr/src/plugins docker.pkg.github.com/zahiyo/luarocks/luarocks:3.3-lua-5.1 luacheck .
+        run: docker run --rm -v "$PWD":/usr/src/plugins -w /usr/src/plugins docker.pkg.github.com/wada-ama/luarocks/luarocks:3.3-lua-5.1 luacheck .
 
       - name: Run tests
-        run: |
-          docker run --rm -v "$PWD":/usr/src/plugins -w /usr/src/plugins docker.pkg.github.com/zahiyo/luarocks/luarocks:3.3-lua-5.1 luarocks test
+        run: docker run --rm -v "$PWD":/usr/src/plugins -w /usr/src/plugins docker.pkg.github.com/wada-ama/luarocks/luarocks:3.3-lua-5.1 luarocks test
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
@@ -48,8 +47,8 @@ jobs:
           flags: unittests
           fail_ci_if_error: true
 
-  # Package rocks
-  pack:
+  # Publish rocks
+  publish:
     # Ensure test job passes before pushing .
     needs: test
 
@@ -63,12 +62,11 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
       - name: Pull luarocks:3.3-lua-5.1
-        run: docker pull docker.pkg.github.com/zahiyo/luarocks/luarocks:3.3-lua-5.1
+        run: docker pull docker.pkg.github.com/wada-ama/luarocks/luarocks:3.3-lua-5.1
 
-      - name: Pack rocks
+      - name: Publish rock
         run: |
-          for rockspec in *.rockspec; do
-            docker run --rm -v "$PWD":/usr/src/plugins -w /usr/src/plugins \
-            docker.pkg.github.com/zahiyo/luarocks/luarocks:3.3-lua-5.1 \
-            luarocks make --pack-binary-rock $rockspec
-          done
+          rockspec=$(ls kong-plugin-opa-*.rockspec)
+
+          docker run --rm -v "$PWD":/usr/src/plugins -w /usr/src/plugins docker.pkg.github.com/wada-ama/luarocks/luarocks:3.3-lua-5.1 \
+          luarocks upload $rockspec --api-key=${{ secrets.LUAROCKS_TOKEN }}
