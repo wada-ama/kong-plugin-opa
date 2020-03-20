@@ -50,6 +50,12 @@ form parameter | default | description
 
 ## Installing the plugin
 
+### From LuaRocks public repository
+
+You can install the plugin from the public repository:
+
+    luarocks install kong-plugin-opa
+
 ### Via LuaRocks from the source archive
 
 To build the sources and install the rock, run the following from this repo root directory:
