@@ -71,4 +71,4 @@ jobs:
         run: |
           luarocks install lua-cjson
           rockspec=$(ls kong-plugin-opa-*.rockspec)
-          luarocks upload $rockspec --api-key=${{ secrets.LUAROCKS_TOKEN }}
+          luarocks upload $rockspec --api-key=${{ secrets.LUAROCKS_TOKEN }} --force
