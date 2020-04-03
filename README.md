@@ -30,6 +30,17 @@ To configure this plugin on a Service you configured in Kong, issue the followin
     --data 'config.server.host=opa' \
     --data 'config.policy.decision=httpapi/authz/allow'
 
+or with a declarative configuration (DB-less mode)
+
+    plugins:
+        - name: opa
+          service: {service}
+          config:
+            server:
+                host: opa
+            policy:
+                decision: httpapi/authz/allow
+
 `{service}` is the `id` or `name` of the Service that this plugin configuration will target.
 
 ### Parameters
@@ -64,16 +75,20 @@ To build the sources and install the rock, run the following from this repo root
 
 ## Development
 
-## Compile your plugin inside the Docker container
+### Compile your plugin inside the Docker container
 
-The most straightforward way to compile and test your code is to use the provided Docker image.
+The most straightforward way to compile and test your code is to use the provided Docker image provided in `luadevenv`.
 Start by building the image that will contains the lua runtime and luarocks package manager:
 
-    docker build -t lua_devenv .
+    docker build -t wada/luadevenv:3.3-lua-5.1 .
 
-You can then run your tests or code analysis inside the container:
+_Note: in the above example, we tagged the image with the luarocks and lua version to specify respective used versions._
 
-    docker run --rm -v "$PWD":/usr/kong -w /usr/kong lua_devenv <command>
+You can then run your tests or code analysis inside a container:
+
+    docker run --rm -v "$PWD":/usr/kong -w /usr/kong wada/luadevenv:3.3-lua-5.1 <command>
+
+The container will intialize a lua environment in the mounted directory. The initialization creates a `/lua_modules` directory where packages and executables are going to be installed.
 
 Here's some usefull commands:
 
@@ -81,3 +96,11 @@ Here's some usefull commands:
 |--|--|
 |`luarocks test`|Run all tests|
 |`luacheck .`|Analyze and a lint all lua code in the current directory and subdirectories|
+
+### Running integration tests locally
+
+You can run the integration tests with the following command from the root directory:
+
+    docker-compose -f integration-tests/docker-compose.test.yml up
+
+Once all services ready the `sut` service will run the postman collection `./integration-tests/postman/kong-plugin-opa.integration_tests.postman_collection.json` and print the results.
