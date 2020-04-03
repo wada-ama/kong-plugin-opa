@@ -1,29 +1,18 @@
-FROM alpine:latest
+FROM kong:2.0
 
-# Version compatible with Kong
-ENV LUA_VERSION=5.1.5
-ENV LUAROCKS_VERSION=3.3.1
+LABEL org.wada.name="wada/kong-opa"
+LABEL org.wada.description="Kong image with kong-plugin-opa installed for integration testing"
 
-# install development tools
-RUN apk add --no-cache --virtual build-essential \
-    make gcc libc-dev readline-dev
+WORKDIR /usr/kong/opa
 
-# build and install Lua
-RUN wget -O - http://www.lua.org/ftp/lua-${LUA_VERSION}.tar.gz | tar -zxf - \
-    && cd lua-${LUA_VERSION}/ \
-    && make linux test \
-    && make install
+# copy the plugin sources
+COPY . .
 
-# download and unpack the LuaRocks tarball
-RUN wget --no-check-certificate -O - https://luarocks.org/releases/luarocks-${LUAROCKS_VERSION}.tar.gz | tar -zxpf - \
-    && cd luarocks-${LUAROCKS_VERSION}/ \
-    && ./configure \
-    && make build \
-    && make install
+# switch to root to install rocks in /usr/local
+USER root
 
-# install system tools used to install Lua rocks
-RUN apk add --no-cache \
-    curl unzip openssl
+# build and install the plugin
+RUN luarocks make
 
-COPY docker-entrypoint.sh /
-ENTRYPOINT [ "/docker-entrypoint.sh" ]
+# back to kong user
+USER kong

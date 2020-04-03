@@ -1,26 +1,22 @@
 name: Luarocks
 
-# Controls when the action will run. Triggers the workflow on push or pull request 
-# events but only for the master branch
+# Triggers the workflow on push or pull request
+# events on the master branch, or on new tag
 on:
   push:
-    branches:
-      - master
-    tags: 
-      - v*
+    branches: [master]
+    tags: [v*]
 
   pull_request:
-    branches:
-      - master
+    branches: [master]
 
 # A workflow run jobs that will publish the rock on successful tests
 jobs:
-  # Run tests
+  # Run unit tests
   test:
     runs-on: ubuntu-latest
 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
       - uses: leafo/gh-actions-lua@v5
@@ -48,12 +44,26 @@ jobs:
           flags: unittests
           fail_ci_if_error: true
 
-  # Publish rocks
-  publish:
-    # Ensure test job passes before pushing .
-    needs: test
+  # Run integration tests
+  integration-tests:
+    runs-on: ubuntu-latest
 
-    # The type of runner that the job will run on
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run integration tests
+        run: |
+          docker-compose --file integration-tests/docker-compose.test.yml build
+          docker-compose --file integration-tests/docker-compose.test.yml run sut
+
+  # Push rock to Luarocks
+  push:
+    # Upload only on a tag creation
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+
+    # Ensure test jobs passes before pushing
+    needs: [test, integration-tests]
+
     runs-on: ubuntu-latest
 
     steps:

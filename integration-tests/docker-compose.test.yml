@@ -1,0 +1,45 @@
+version: '3.7'
+
+services:
+  sut:
+    image: postman/newman:ubuntu
+    volumes:
+      - ./postman:/etc/newman:ro
+    entrypoint: ["/etc/newman/wait-for-services.sh", "kong:8001", "opa:8181", "httpbin:80"]
+    command: ["run", "kong-plugin-opa.integration_tests.postman_collection.json", "-e", "docker.postman_environment.json"]
+    depends_on:
+      - kong
+      - opa
+      - httpbin
+
+  kong:
+    build: ..
+    volumes:
+      - ./kong-test.yml:/usr/local/kong/declarative/kong-test.yml:ro
+    environment:
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: '0.0.0.0:8001'
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/declarative/kong-test.yml
+      KONG_LOG_LEVEL: debug
+      # add kong-plugin-opa to the list of plugins that come bundled with Kong
+      KONG_PLUGINS: bundled,opa
+    ports:
+      - "8000-8001:8000-8001/tcp"
+
+  opa:
+    image: openpolicyagent/opa:latest
+    working_dir: /bundle
+    command: "run --server --bundle . --log-level debug --log-format text"
+    volumes:
+      # load opa bundle with policy for tests 
+      - ./opa/bundle:/bundle:ro
+    ports:
+      - "8181:8181"
+  
+  # mock upstream service
+  httpbin:
+    image: kennethreitz/httpbin
+    ports:
+      - "80:80"
