@@ -46,7 +46,7 @@ function _M.execute(conf)
 
     -- decode JWT token
     local token = {}
-    if string.find(authorization, "Bearer") then
+    if authorization and string.find(authorization, "Bearer") then
         local encoded_token = authorization:gsub("Bearer ", "")
         token = jwt:load_jwt(encoded_token)
     end
