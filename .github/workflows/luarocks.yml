@@ -58,6 +58,8 @@ jobs:
 
   # Push rock to Luarocks
   push:
+    # Upload only on a tag creation
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
 
     # Ensure test jobs passes before pushing
     needs: [test, integration-tests]
