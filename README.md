@@ -1,5 +1,10 @@
 # API Authorization with OPA and Kong
 
+![Luarocks](https://github.com/wada-ama/kong-plugin-opa/workflows/Luarocks/badge.svg)
+[![codecov](https://codecov.io/gh/wada-ama/kong-plugins/branch/master/graph/badge.svg)](https://codecov.io/gh/wada-ama/kong-plugin-opa)
+![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/wada-ama/kong-plugin-opa)
+![GitHub](https://img.shields.io/github/license/wada-ama/kong-plugin-opa)
+
 >:warning: **NOTE**
 >
 >The `kong-plugin-opa` has been released to the OPA community and can be found in the OPA [contrib] repository. This repository maps to the [kong_api_authz] subdirectory and its only purpose is **to provide a CI pipeline that run tests and publish the rock on [Luarocks]**.
@@ -43,6 +48,7 @@
 [contrib]: https://github.com/open-policy-agent/contrib
 [kong_api_authz]: https://github.com/open-policy-agent/contrib/tree/master/kong_api_authz
 [Luarocks]: https://luarocks.org
+
 ---
 
 This directory contains a plugin to integrate [OPA](http://www.openpolicyagent.org/) with [Kong API Gateway](https://konghq.com/kong/) to perform API authorization.
