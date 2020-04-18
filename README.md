@@ -1,5 +1,50 @@
 # API Authorization with OPA and Kong
 
+>:warning: **NOTE**
+>
+>The `kong-plugin-opa` has been released to the OPA community and can be found in the OPA [contrib] repository. This repository maps to the [kong_api_authz] subdirectory and its only purpose is **to provide a CI pipeline that run tests and publish the rock on [Luarocks]**.
+>
+>To map that subdirectory, the `master` branch has to be replaced by a new one. The old `master` branch has been renamed `precontrib-master`. The new `master` branch is kind of a _fork_ of the [kong_api_authz] directory from the [contrib] repository.
+>
+>- **Contributing**
+>
+>If you want to contribute, with bug fixes, new features or improvements, please feel free to submit a Pull Request in the [contrib] repository.
+>
+>If you want to update the CI pipeline, create a Pull Request and specify the `master` branch to merge your changes. DO NOT merge into the `upstream-kong-plugin-opa` branch, it should only contains commits from the [contib] repository.
+>
+>- **Pulling commits from upstream**
+>
+>_From <https://stackoverflow.com/a/24577293>_
+>
+>First, you need to pull the `master` branch from the [contrib] repository:
+>
+>1. Add the [contrib] repository. We're going to name it `upstream`
+>
+>        $ git remote add upstream https://github.com/open-policy-agent/contrib.git
+>
+>2. Create (or update) the `upstream-master` branch to track remote `master` branch from `upstream`
+>
+>        $ git fetch --all
+>        $ git checkout upstream/master -B upstream-master
+>
+>Next, we need to update `upstream-kong-api-authz` branch:
+>
+>1. From `upstream-master` branch (where you should already be if you followed previous steps), filter commits related to `kong_api_authz` subdirectory.
+>
+>        git subtree split \
+>        --prefix=kong_api_authz \
+>        --onto upstream-kong-api-authz
+>
+>Finally, rebase `origin/master` on `upstream-kong-api-authz`
+>
+>        git checkout master
+>        git rebase upstream-kong-api-authz
+>
+[contrib]: https://github.com/open-policy-agent/contrib
+[kong_api_authz]: https://github.com/open-policy-agent/contrib/tree/master/kong_api_authz
+[Luarocks]: https://luarocks.org
+---
+
 This directory contains a plugin to integrate [OPA](http://www.openpolicyagent.org/) with [Kong API Gateway](https://konghq.com/kong/) to perform API authorization.
 
 The plugin can be enabled on a [Service] or [Route] to authorize access to an upstream service.
