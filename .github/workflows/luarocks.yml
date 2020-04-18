@@ -1,0 +1,84 @@
+name: Luarocks
+
+# Triggers the workflow on push or pull request
+# events on the master branch, or on new tag
+on:
+  push:
+    branches: [master]
+    tags: [v*]
+
+  pull_request:
+    branches: [master]
+
+# A workflow run jobs that will publish the rock on successful tests
+jobs:
+  # Run unit tests
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: leafo/gh-actions-lua@v5
+        with:
+          luaVersion: "5.1.5"
+
+      - uses: leafo/gh-actions-luarocks@v2
+        with:
+          luarocksVersion: "3.1.3"
+
+      - name: Compile Lua code
+        run: luarocks make
+
+      - name: Run tests
+        run: luarocks test
+
+      - name: Run code analysis
+        run: luacheck src spec
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./luacov.report.out
+          flags: unittests
+          fail_ci_if_error: true
+
+  # Run integration tests
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run integration tests
+        run: |
+          docker-compose -f integration/docker-compose.yml -f integration/docker-compose.test.yml build
+          docker-compose -f integration/docker-compose.yml -f integration/docker-compose.test.yml run sut
+
+  # Push rock to Luarocks
+  push:
+    # Upload only on a tag creation
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+
+    # Ensure test jobs passes before pushing
+    needs: [test, integration-tests]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: leafo/gh-actions-lua@v5
+        with:
+          luaVersion: "5.1.5"
+
+      - uses: leafo/gh-actions-luarocks@v2
+        with:
+          luarocksVersion: "3.1.3"
+
+      - name: Publish rock
+        run: |
+          luarocks install lua-cjson
+          rockspec=$(ls kong-plugin-opa-*.rockspec)
+          luarocks upload $rockspec --api-key=${{ secrets.LUAROCKS_TOKEN }} --force
